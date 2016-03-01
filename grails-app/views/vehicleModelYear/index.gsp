@@ -54,11 +54,13 @@
         $(document).ready(function () {
             clearFilter();
             maxPageNumber = 1;
-            vmyList(1);
-
+            selectedPageNumber = 1;
+            vmyList(selectedPageNumber);
+            $("#idForm").val(null)
         })
 
         var maxPageNumber
+        var selectedPageNumber
 
         var makeFilter
         var modelFilter
@@ -78,7 +80,7 @@
             } else {
 
                 $.ajax({
-                    method: "POST",
+                    method: "GET",
                     url: "list",
                     data: {
                         "selectedPageNum": selectedPageNum, "makeFilter": makeFilter, "modelFilter": modelFilter,
@@ -104,9 +106,45 @@
                                 vmyList($("#pageNumberSelected").val())
                             }
                         })
+
+                        selectedPageNumber = selectedPageNum
                     }
                 })
 
+            }
+        }
+
+        function updateVMY(id) {
+            $("#makeForm").val($("#vmy_id_" + id + " td:eq(0)").text());
+            $("#modelForm").val($("#vmy_id_" + id + " td:eq(1)").text());
+            $("#yearForm").val($("#vmy_id_" + id + " td:eq(2)").text());
+            $("#idForm").val(id);
+            $("#mainFormButton").val("Edit");
+            $("#divVMYForm :input[name='cancel']").show();
+        }
+
+        function cancelUpdateVMY() {
+            $("#divVMYForm :input[name*='Form']").val(null);
+            $("#mainFormButton").val("Save");
+            $("#divVMYForm :input[name='cancel']").hide();
+        }
+
+        function deleteVMY(id) {
+            if (confirm("Are you sure you want to remove the selected VehicleModelYear?")) {
+                $.ajax({
+                    method: "POST",
+                    url: "delete",
+                    data: {
+                        "id": id
+                    },
+                    success: function (data) {
+                        if (data.message == "OK") {
+                            vmyList(selectedPageNumber)
+                        } else {
+                            //TODO: <svera>: mostrar error
+                        }
+                    }
+                })
             }
         }
 
@@ -148,6 +186,37 @@
             }
             vmyList(1)
         }
+
+        function saveVMY() {
+            $.ajax({
+                method: "POST",
+                url: "save",
+                data: {
+                    "make": $("#makeForm").val(),
+                    "model": $("#modelForm").val(),
+                    "year": $("#yearForm").val(),
+                    "id": $("#idForm").val()
+                },
+                success: function (data) {
+                    if (data.message == "OK") {
+                        $("#formMessage").html("VehicleModelYear was saved successfully")
+                        $("#divVMYForm :input[name*='Form']").val(null);
+                        $("#mainFormButton").val("Save");
+                        $("#divVMYForm :input[name='cancel']").hide();
+                        vmyList(selectedPageNumber)
+                    } else {
+                        $("#formMessage").html("Can not be possible to save VehicleModelYear")
+
+                        for (i in data.errors) {
+                            for (j in data.errors[i])
+                                var obj = data.errors[i][j].message
+                            console.log(obj)
+                            $("#formMessage").append("<br/>" + obj.toString())
+                        }
+                    }
+                }
+            })
+        }
     </script>
 </head>
 
@@ -172,6 +241,8 @@
 
 
     <div id="divVMYForm">
+        <div id="formMessage"></div>
+
         <p><label for="makeForm">Make</label>
             <input type="text" id="makeForm" name="makeForm"/></p>
 
@@ -180,7 +251,9 @@
 
         <p><label for="yearForm">Year</label>
             <input id="yearForm" type="number" min="1800" max="9999" name="yearForm"/></p>
-        <input type="submit" name="save" value="Save" onclick="saveVMY()">
+        <input type="hidden" id="idForm" name="idForm"/>
+        <input type="submit" id="mainFormButton" name="mainButton" value="Save" onclick="saveVMY()">
+        <input type="submit" name="cancel" value="Cancel" style="display: none" onclick="cancelUpdateVMY()">
     </div>
 </div>
 

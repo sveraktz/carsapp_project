@@ -2,9 +2,8 @@ package com.carsapp
 
 import grails.converters.JSON
 
-//import grails.rest.RestfulController
+import java.sql.SQLException
 
-//class VehicleModelYearController extends RestfulController {
 class VehicleModelYearController {
 
     static final def maxRowNum = 15
@@ -15,17 +14,26 @@ class VehicleModelYearController {
 
     def save() {
         def resp = [:]
-        def vmyNew = new VehicleModelYear()
-        vmyNew.make = params.make
-        vmyNew.model = params.model
-        vmyNew.year = params.year
 
-        vmyNew.validate()
-        if(!vmyNew.hasErrors()) {
-            vmyNew.save()
+        def vmy
+
+        if (params.int("id")) {
+            vmy = VehicleModelYear.get(params.int("id"))
+        } else {
+            vmy = new VehicleModelYear()
+        }
+        vmy.make = params.make
+        vmy.model = params.model
+        vmy.year = params.int("year")
+
+        vmy.validate()
+        if(!vmy.hasErrors()) {
+            vmy.save(flush: true)
             resp["message"] = "OK"
         } else {
             resp["message"] = "ERROR"
+
+            resp["errors"] = vmy.errors
         }
         render resp as JSON
     }
@@ -69,9 +77,20 @@ class VehicleModelYearController {
         render resp as JSON
     }
 
-//    static responseFormats = ["json", "xml"]
-//
-//    VehicleModelYearController() {
-//        super(VehicleModelYear)
-//    }
+    def delete() {
+        println("se entro para borrar el VMY con id: "+ params.int("id"))
+        def resp = [:]
+        def vmy = VehicleModelYear.get(params.int("id"))
+        if (vmy) {
+            try {
+                vmy.delete(flush:true)
+                resp["message"] = "OK"
+            }catch (SQLException e) {
+                resp["message"] = "ERROR"
+            }
+        } else {
+            resp["message"] = "ERROR"
+        }
+        render resp as JSON
+    }
 }
