@@ -26,7 +26,7 @@ environments {
     development {
         dataSource {
             url = "jdbc:mysql://localhost/develop_schema?useUnicode=yes&characterEncoding=UTF-8"
-            dbCreate = 'validate'
+            dbCreate = 'update'
             username = 'root'
             password = 'admin'
         }
