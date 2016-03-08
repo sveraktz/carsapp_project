@@ -2,6 +2,8 @@ package com.carsapp
 
 import grails.converters.JSON
 
+import java.sql.SQLException
+
 class CarController {
 
     def vehicleModelYearService
@@ -70,6 +72,28 @@ class CarController {
             resp["message"] = "ERROR"
 
             resp["errors"] = car.errors
+        }
+        render resp as JSON
+    }
+
+    def list() {
+        JSON.use("deep") {
+            render Car.getAll() as JSON
+        }
+    }
+
+    def delete() {
+        def resp = [:]
+        def car = Car.get(params.int("id"))
+        if (car) {
+            try {
+                car.delete(flush:true)
+                resp["message"] = "OK"
+            }catch (SQLException e) {
+                resp["message"] = "ERROR"
+            }
+        } else {
+            resp["message"] = "ERROR"
         }
         render resp as JSON
     }

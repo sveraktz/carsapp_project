@@ -31,6 +31,7 @@
 
             $("#modelForm").on('change', function (e) {
                 var modelSelected = this.value;
+                console.log("model selected " + modelSelected)
                 if (modelSelected != "") {
                     var makeSelected = $("#makeForm").val()
                     getYearByMakeModel(makeSelected, modelSelected)
@@ -50,7 +51,6 @@
 
             $("#licensePlateForm").keyup(function (e) {
                 var v = this.value;
-                console.log(v);
                 var value
                 if (v.charAt(0).match('[a-zA-Z]')) {
                     value = v.charAt(0).toUpperCase()
@@ -73,7 +73,9 @@
                 } else {
                     this.value = ""
                 }
-            })
+            });
+
+            carList();
         })
 
         function getModelByMake(make) {
@@ -136,11 +138,11 @@
                     .end();
         }
 
-        function saveOwner() {
+        function saveCar() {
             var make = $("#makeForm").val();
             var model = $("#modelForm").val();
             var year = $("#yearForm").val();
-            var secId = $("#ownerSecId").val();
+            var secId = $("#ownerSecIdForm").val();
             var serial = $("#serialNumberForm").val();
 
             if (serial != null && make != null && make != "" && model != null && model != "" && year != null) {
@@ -154,8 +156,7 @@
                     success: function (data) {
                         if (data.message == "OK") {
                             $("#formMessage").html("Car was saved successfully");
-                            //cancelUpdate();
-                            //listOwner();
+                            carList();
                         } else {
                             $("#formMessage").html("Can not be possible to save Car")
 
@@ -165,6 +166,84 @@
                                 console.log(obj)
                                 $("#formMessage").append("<br/>" + obj.toString())
                             }
+                        }
+                    }
+                })
+            }
+        }
+
+        function carList() {
+            $.ajax({
+                method: "GET",
+                url: "list",
+                data: {},
+                success: function (data) {
+                    $("#divCarList > table > tbody").html("");
+                    var table = $("#divCarList").children()
+                    for (i in data) {
+                        var car = data[i]
+                        var license = car.licensePlate
+                        var ownerSecId = car.owner == null ? "" : car.owner.securityId;
+                        var licenseNumber = license == null ? "" : license.number;
+                        var vmy = car.makeModelYear;
+                        table.append(
+                                "<tr id='car_id_" + car.id + "' onclick='updateCar(" + car.id + ")'><td>"
+                                + car.serialNumber + "</td><td>" + vmy.make + "</td><td>" + vmy.model
+                                + "</td><td>" + vmy.year + "</td><td>" + licenseNumber + "</td><td>"
+                                + ownerSecId + "</td></tr>")
+
+
+                    }
+                }
+            })
+        }
+
+        function updateCar(id) {
+
+            $("#serialNumberForm").val($("#car_id_" + id + " td:eq(0)").text());
+            var make =  $("#car_id_" + id + " td:eq(1)").text()
+            var model = $("#car_id_" + id + " td:eq(2)").text()
+            var year = $("#car_id_" + id + " td:eq(3)").text()
+            $("#makeForm").val(make);
+            getModelByMake(make);
+            getYearByMakeModel(make, model);
+
+            setTimeout(function(){$("#yearForm").val(year)},200);
+            setTimeout(function(){$("#modelForm").val(model)},200);
+            //
+            $("#licensePlateForm").val($("#car_id_" + id + " td:eq(4)").text());
+            $("#ownerSecIdForm").val($("#car_id_" + id + " td:eq(5)").text());
+
+            $("#idCarForm").val(id);
+            $("#mainFormButton").val("Edit");
+            $("#divCarForm :input[name='cancel']").show();
+            $("#divCarForm :input[name='delete']").show();
+        }
+
+        function cancelUpdate() {
+            clearModelList()
+            $("#licensePlateForm").val(null);
+            $("#serialNumberForm").val(null);
+            $("#ownerSecIdForm").val(null);
+            $("#mainFormButton").val("Save");
+            $("#divCarForm :input[name='cancel']").hide();
+            $("#divCarForm :input[name='delete']").hide();
+        }
+
+        function deleteCar() {
+            if (confirm("Are you sure you want to remove the selected Car?")) {
+                $.ajax({
+                    method: "POST",
+                    url: "delete",
+                    data: {
+                        "id": $("#idCarForm").val()
+                    },
+                    success: function (data) {
+                        if (data.message == "OK") {
+                            cancelUpdate();
+                            carList();
+                        } else {
+                            //TODO: <svera>: mostrar error
                         }
                     }
                 })
@@ -224,14 +303,31 @@
         <input type="checkbox" id="hasOwner" name="hasOwner">
 
     <div id="ownerId" style="display:none">
-        <p><label for="ownerSecId">Owner</label>
-            <input type="number" id="ownerSecId" name="ownerSecId"
+        <p><label for="ownerSecIdForm">Owner</label>
+            <input type="number" id="ownerSecIdForm" name="ownerSecIdForm"
                    placeholder="<enter the security id>"/></p>
     </div>
-    <input type="hidden" id="idForm" name="idForm"/>
-    <input type="submit" id="mainFormButton" name="mainButton" value="Save" onclick="saveOwner()">
+    <input type="hidden" id="idCarForm" name="idCarForm"/>
+    <input type="submit" id="mainFormButton" name="mainButton" value="Save" onclick="saveCar()">
+    <input type="submit" name="delete" value="Delete" style="display: none" onclick="deleteCar()">
     <input type="submit" name="cancel" value="Cancel" style="display: none" onclick="cancelUpdate()">
 </div>
 
+<div id="divList">
+    <div id="divCarList">
+        <table>
+            <thead>
+            <th width='15%'>Serial</th>
+            <th width='25%'>Make</th>
+            <th width='25%'>Model</th>
+            <th width='10%'>Year</th>
+            <th width='10%'>Lic.Plate</th>
+            <th width="15%">Owner Sec.Id</th>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
 </body>
 </html>

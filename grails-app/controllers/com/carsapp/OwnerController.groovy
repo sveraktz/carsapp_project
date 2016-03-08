@@ -45,7 +45,6 @@ class OwnerController {
     }
 
     def delete() {
-        println("se entro para borrar el Owner con id: "+ params.int("id"))
         def resp = [:]
         def owner = Owner.get(params.int("id"))
         if (owner) {

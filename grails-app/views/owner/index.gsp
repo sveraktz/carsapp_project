@@ -154,7 +154,7 @@
             $("#divList").show();
         }
 
-        function deleteOwner(id) {
+        function deleteOwner() {
             if (confirm("Are you sure you want to remove the selected Owner?")) {
                 $.ajax({
                     method: "POST",
@@ -392,22 +392,5 @@
         </table>
     </div>
 </div>
-
-<!--div id="divCarList">
-        <table>
-            <thead>
-            <th width='10%'>SecurityID</th>
-            <th width='20%'>First Name</th>
-            <th width='15%'>Last Name</th>
-            <th width='15%'>Nationality</th>
-            <th width='10%'></th>
-            <th width='15%'></th>
-            <th width='10%'></th>
-            </thead>
-            <tbody>
-
-            </tbody>
-        </table>
-</div-->
 </body>
 </html>
